@@ -1,5 +1,11 @@
 from confluent_kafka import Consumer, KafkaError, KafkaException
-import json, ssl
+import json, ssl, smtplib
+
+# Import the email modules we'll need
+from email.mime.text import MIMEText
+from email.mime.multipart import MIMEMultipart
+from datetime import datetime
+
 topic_name = 'twitter_tweets'
 bootstrap_servers = "kafka-bootstrap.lab.test:443"
 protocol = 'SSL'
@@ -21,6 +27,20 @@ fetch_min_bytes = 1
 heartbeat_interval_ms = 3300 # 3000
 fetch_wait_max_ms = 500
 running = True
+#email features
+sender_email = "urielchikohen@gmail.com"
+receiver_email = "urielchikohen@gmail.com"
+message = ""
+
+def send_email(json_data):
+    timestamp = str(datetime.now())
+    msg = MIMEText(json_data)
+    msg['From'] = sender_email
+    msg['To'] = receiver_email
+    msg['Subject'] = 'Kafka lab msg {}'.format(timestamp)
+    s = smtplib.SMTP('email')
+    s.send_message(msg)
+    s.quit()
 
 # def complete_commit(error, partitions):
 #     if error:
@@ -57,6 +77,8 @@ def consume(consumer, topics):
         if msg.error(): continue
         print("a")
         msg = msg.value().decode('utf-8')
+        send_email(json.loads(msg))
+
         print('msg: {}'.format(msg))
         # if msg.error():
         #     if msg.error().code() == kafkaError._PARTITION_EOF
